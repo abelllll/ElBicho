@@ -1794,6 +1794,31 @@ void dibuixa_CatmullRom_VAO(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat
 	glm::mat4 I(1.0f);
 	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &I[0][0]);
 
+	// ===== DEBUG DRAW: curva + puntos SIEMPRE visibles (aunque la iluminación esté en Suau/Phong) =====
+	GLboolean oldBlend = glIsEnabled(GL_BLEND);
+	GLboolean oldDepth = glIsEnabled(GL_DEPTH_TEST);
+
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+
+	// Si tu shader usa material/reflectancia, aquí fuerzo un “color plano” muy visible.
+	
+
+	// IMPORTANTE: si tienes un flag tipo "Material (T) / Color (F)"
+	// fuerza a usar color en vez de material para debug:
+	bool sw_mat_backup[5];
+	for (int i = 0; i < 5; i++) sw_mat_backup[i] = sw_mat[i];
+
+	// En muchos EntornVGI: sw_mat[0] o un flag global decide material vs color.
+	// Si en tu caso hay un boolean global tipo sw_material, ponlo a false aquí.
+	// Ejemplo (ajusta al nombre real):
+	// sw_material = false;
+
+	// Si tu implementación usa sw_mat para activar componentes,
+	// desactiva reflectancias y deja el color “directo”:
+	for (int i = 0; i < 5; i++) sw_mat[i] = false;
+
+
 	// DIBUJAR PUNTOS CONTROL
 	SeleccionaColorMaterial(sh_programID, colPts, sw_mat);
 	glPointSize(10.0f);
@@ -1804,6 +1829,13 @@ void dibuixa_CatmullRom_VAO(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat
 	SeleccionaColorMaterial(sh_programID, colCurve, sw_mat);
 	glLineWidth(4.0f);
 	draw_TriVAO_Object(CATMULL_CURVE_VAO);
+
+	// Restaurar flags
+for (int i=0;i<5;i++) sw_mat[i] = sw_mat_backup[i];
+
+if (oldBlend) glEnable(GL_BLEND); else glDisable(GL_BLEND);
+if (oldDepth) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+
 }
 void dibuixa_CatmullRom_Patches(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
 {
