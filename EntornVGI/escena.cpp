@@ -150,8 +150,21 @@ void dibuixa_EscenaGL(GLuint sh_programID, bool eix, GLuint axis_Id, CMask3D rei
 
 // Dibuix de l'objecte TIE (Nau enemiga Star Wars)
 	case TIE:
-		tie(sh_programID, MatriuVista, MatriuTG, sw_mat);
+	{
+		glm::mat4 ModelMatrix = MatriuTG;
+
+		// 1) Trasladar el origen a la parte frontal (cabina)
+		ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, -10.0f, 0.0f));
+
+		// 2) Escalar a la mitad (nau muy grande respecto al mar)
+		ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.5f, 0.5f, 0.5f));
+
+		// 3) Dibujar Tie con las transformaciones aplicadas
+		tie(sh_programID, MatriuVista, ModelMatrix, sw_mat);
+
 		break;
+	}
+
 
 	case CAMIO:
 		camio(sh_programID, MatriuVista, MatriuTG, sw_mat);
