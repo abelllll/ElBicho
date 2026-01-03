@@ -233,6 +233,7 @@
 #define ID_PROJECCIO_ORTOGRAFICA        32908
 #define ID_Menu32909                    32909
 #define ID_OBJECTE_OCTOPUS				32911
+#define ID_OBJECTE_PAISATGE				32912
 
 // Next default values for new objects
 // 

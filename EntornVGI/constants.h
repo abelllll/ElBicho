@@ -61,6 +61,7 @@
 #define OBJ3DS '3'		// Objecte format 3DS
 #define OBJOBJ '4'	// Objecte format OBJ
 #define OCTOPUS 'x'
+#define PAISATGE 'g'
 
 
 //-------------- VGI: Tipus d'Iluminacio
@@ -94,6 +95,13 @@ const double p_far=50000.0;
 #define TEXTURA_FITXER 'f'
 #define TEXTURA_FITXERBMP 'f'
 #define TEXTURA_FITXERIMA 'I'
+
+
+// -------------- VGI: IDs VAO
+#define FARO_BASE_VAO   220
+#define FARO_CAP_VAO    221
+#define FARO_GLASS_VAO  222
+
 
 
 // --------------  VGI: NOMBRE DE LLUMS: Nombre de Llums de l'aplicació, les d'OpenGL

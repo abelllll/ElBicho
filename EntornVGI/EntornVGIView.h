@@ -463,6 +463,9 @@ public:
 	afx_msg void OnUpdateLlumsLlum7(CCmdUI* pCmdUI);
 	afx_msg void OnProjeccioOrtografica();
 	afx_msg void OnUpdateProjeccioOrtografica(CCmdUI* pCmdUI);
+	afx_msg void OnObjectePaisatge();
+	afx_msg void OnUpdateObjectePaisatge(CCmdUI* pCmdUI);
+
 };
 
 #ifndef _DEBUG  // Versión de depuración en EntornVGIView.cpp

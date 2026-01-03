@@ -345,7 +345,8 @@ BEGIN
         MENUITEM "Tetera",                      32789, CHECKED
         MENUITEM "Camio",                       ID_OBJECTE_CAMIO, CHECKED
         MENUITEM "Arc",                         32871, CHECKED
-		MENUITEM "Octopus"                      ID_OBJECTE_OCTOPUS, CHECKED
+		MENUITEM "Octopus",                      ID_OBJECTE_OCTOPUS, CHECKED
+		MENUITEM "Paisatge",                     ID_OBJECTE_PAISATGE, CHECKED
         POPUP "Corbes"
         BEGIN
             MENUITEM "Bezier",                      ID_OBJETE_CORBA_BEZIER, CHECKED

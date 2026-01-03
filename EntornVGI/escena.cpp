@@ -159,6 +159,10 @@ void dibuixa_EscenaGL(GLuint sh_programID, bool eix, GLuint axis_Id, CMask3D rei
 	case OCTOPUS:
 		octopus(sh_programID, MatriuVista, MatriuTG, sw_mat);
 		break;
+	case PAISATGE:
+		dibuixa_Paisatge(sh_programID, MatriuVista, MatriuTG, sw_mat);
+		break;
+
 
 // Dibuix de l'objecte OBJ
 	case OBJOBJ:
@@ -1461,6 +1465,64 @@ void octopus(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, boo
 		draw_TriEBO_Object(GLU_SPHERE);
 		glDisable(GL_BLEND);
 	}
+
+}
+void faro(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
+{
+	// Colores
+	CColor colBase;  colBase.r = 0.7f; colBase.g = 0.4f; colBase.b = 0.1f; colBase.a = 1.0f;
+	CColor colVidre; colVidre.r = 0.8f; colVidre.g = 0.9f; colVidre.b = 1.0f; colVidre.a = 0.4f;
+
+	glm::mat4 M(1.0f);
+
+	// ---------- BASE (opaca): VAO FARO_BASE_VAO (7.5 -> 4.5, h=20) ----------
+	M = MatriuTG;
+	SeleccionaColorMaterial(sh_programID, colBase, sw_mat);
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &M[0][0]);
+	draw_TriEBO_Object(FARO_BASE_VAO);
+
+	// ---------- VIDRIO (TRANSPARENTE): VAO FARO_GLASS_VAO (r=4.5, h=8) ----------
+	// El vidrio empieza en Z=20
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	M = MatriuTG;
+	M = glm::translate(M, glm::vec3(0.0f, 0.0f, 20.0f));
+	SeleccionaColorMaterial(sh_programID, colVidre, sw_mat);
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &M[0][0]);
+	draw_TriEBO_Object(FARO_GLASS_VAO);
+
+	glDisable(GL_BLEND);
+
+	// ---------- TAPA SUPERIOR (opaca): VAO FARO_CAP_VAO (r=6, h=1) ----------
+	// La tapa empieza en Z=28 (20 + 8)
+	M = MatriuTG;
+	M = glm::translate(M, glm::vec3(0.0f, 0.0f, 28.0f));
+	SeleccionaColorMaterial(sh_programID, colBase, sw_mat);
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &M[0][0]);
+	draw_TriEBO_Object(FARO_CAP_VAO);
+}
+void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
+{
+	// 1) Faro en el origen (opaco + vidrio transparente internamente)
+	faro(sh_programID, MatriuVista, MatriuTG, sw_mat);
+
+	// 2) Tie (posición fija provisional para test visual)
+	glm::mat4 M = MatriuTG;
+	M = glm::translate(M, glm::vec3(-200.0f, -200.0f, 10.0f));
+	tie(sh_programID, MatriuVista, M, sw_mat);
+
+	// 3) Mar ondulado TRANSPARENTE al final
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glm::mat4 SeaM = MatriuTG;
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &SeaM[0][0]);
+
+	// Si tu mar se dibuja como VAO:
+	draw_TriVAO_Object(MAR_FRACTAL_VAO);
+
+	glDisable(GL_BLEND);
 }
 
 // FI OBJECTE TIE: FETS PER ALUMNES -----------------------------------------------------------------

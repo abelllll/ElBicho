@@ -12,9 +12,10 @@
 #define NFRAMES 25		// Numero de frames en Paisatge B-Spline o Catmull_Rom
 
 
-const int H = -50;
-const int S = 2;
+const int H_TRAJ = -50;
+const int S_TRAJ = 2;
 const double hV = 10.0;
+
 
 // Numero Pts control
 const int npts = 9;
@@ -30,8 +31,22 @@ const CPunt3D PtsH2[] = { {256.0 + 16.0,256.0,41.0,1.0},{-256.0,256.0,1.0,1.0},{
 {-256.0,0.0,41.0,1.0} };
 
 // Vector dels punts de control Tie (trajectoria escalada)
-const CPunt3D PtsH3[] = { {S * (256.0 + 16.0),S * 256.0,S * (30.0 + H)},{-256.0 * S,256.0 * S,S * (-10.0 + H)},{-256.0 * S,0,S * (30.0 + H)},{S * (-128.0 - 16.0),0,S * (75.0 + H)},
-{-16.0 * S,S * (64.0 + 32.0 + 32.0),S * (150.0 + H)},{S * (256.0 - 32),S * (64.0 - 32.0),S * (75.0 + H)},{S * (256.0 + 16.0),256.0 * S,S * (30 + H)},{-256.0 * S,256.0 * S,S * (-10.0 + H)},{-256.0 * S,0,S * (30.0 + H)} };
+// Vector dels punts de control Tie (trajectoria escalada)
+// Vector dels punts de control Tie (trajectoria escalada)
+// Vector dels punts de control Tie (trajectoria escalada)
+const CPunt3D PtsH3[] = {
+    { S_TRAJ * (256.0 + 16.0),  S_TRAJ * 256.0,                S_TRAJ * (30.0 + H_TRAJ),   1.0 },
+    { -256.0 * S_TRAJ,          256.0 * S_TRAJ,                S_TRAJ * (-10.0 + H_TRAJ),  1.0 },
+    { -256.0 * S_TRAJ,          0.0,                           S_TRAJ * (30.0 + H_TRAJ),   1.0 },
+    { S_TRAJ * (-128.0 - 16.0), 0.0,                           S_TRAJ * (75.0 + H_TRAJ),   1.0 },
+    { -16.0 * S_TRAJ,           S_TRAJ * (64.0 + 32.0 + 32.0), S_TRAJ * (150.0 + H_TRAJ),  1.0 },
+    { S_TRAJ * (256.0 - 32.0),  S_TRAJ * (64.0 - 32.0),        S_TRAJ * (75.0 + H_TRAJ),   1.0 },
+    { S_TRAJ * (256.0 + 16.0),  S_TRAJ * 256.0,                S_TRAJ * (30.0 + H_TRAJ),   1.0 },
+    { -256.0 * S_TRAJ,          256.0 * S_TRAJ,                S_TRAJ * (-10.0 + H_TRAJ),  1.0 },
+    { -256.0 * S_TRAJ,          0.0,                           S_TRAJ * (30.0 + H_TRAJ),   1.0 }
+};
+
+
 
 //------------ FI DEFINICI� DE CONSTANTS
 

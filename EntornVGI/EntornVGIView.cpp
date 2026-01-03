@@ -222,6 +222,8 @@ BEGIN_MESSAGE_MAP(CEntornVGIView, CView)
 		ON_UPDATE_COMMAND_UI(ID_LLUMS_LLUM7, &CEntornVGIView::OnUpdateLlumsLlum7)
 		ON_COMMAND(ID_PROJECCIO_ORTOGRAFICA, &CEntornVGIView::OnProjeccioOrtografica)
 		ON_UPDATE_COMMAND_UI(ID_PROJECCIO_ORTOGRAFICA, &CEntornVGIView::OnUpdateProjeccioOrtografica)
+		ON_COMMAND(ID_OBJECTE_PAISATGE, &CEntornVGIView::OnObjectePaisatge)
+		ON_UPDATE_COMMAND_UI(ID_OBJECTE_PAISATGE, &CEntornVGIView::OnUpdateObjectePaisatge)
 		END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -4117,6 +4119,64 @@ void CEntornVGIView::OnUpdateObjecteCub(CCmdUI *pCmdUI)
 	if (objecte == CUB) pCmdUI->SetCheck(1);
 		else pCmdUI->SetCheck(0);
 }
+// OBJECTE: Paisatge
+void CEntornVGIView::OnObjectePaisatge()
+{
+	// 1) Estado del objeto
+	objecte = PAISATGE;
+
+	// 2) Estado recomendado
+	oculta = true;
+	test_vis = false;
+
+	// 3) Cámara aproximada (luego la afinaremos con la trayectoria)
+	mida = 600.0;
+	OPV.R = 800.0;
+
+	// 4) Encender y configurar la luz restringida (LightSource[7])
+	llumGL[7].encesa = true;
+	llumGL[7].posicio = { 0.0f, 0.0f, 24.0f, 1.0f };          // centro del vidrio (20 + 8/2)
+	llumGL[7].difusa = { 1.0f, 1.0f, 1.0f, 1.0f };
+	llumGL[7].especular = { 1.0f, 1.0f, 1.0f, 1.0f };
+	llumGL[7].restringida = true;
+	// Dirección normalizada del spotlight
+	glm::vec3 dir = glm::normalize(glm::vec3(0.0f, -1.0f, -0.5f));
+	llumGL[7].spotdirection = { dir.x, dir.y, dir.z, 1.0f };
+
+	llumGL[7].spotdirection = { 0.0f, -1.0f, -0.5f, 1.0f };
+	llumGL[7].spotcoscutoff = 0.707106f;                     // cos(45º)
+	llumGL[7].spotexponent = 5.0f;
+
+	// 5) Cargar VAOs necesarios
+	wglMakeCurrent(m_pDC->GetSafeHdc(), m_hrc);
+	netejaVAOList();
+
+	// --- Mar ondulado (como en ARC)
+	CColor color_Mar;
+	color_Mar.r = 0.5; color_Mar.g = 0.4; color_Mar.b = 0.9; color_Mar.a = 1.0;
+	Set_VAOList(MAR_FRACTAL_VAO, loadSea_VAO(color_Mar));
+
+	// --- Faro: VAOs EXACTOS (base cónica + tapa + vidrio)
+	// Necesitamos 3 VAOs distintos para no depender de escalado (conicidad exacta)
+	Set_VAOList(FARO_BASE_VAO, loadCilindre_EBO(7.5, 4.5, 20.0, 20, 20));
+	Set_VAOList(FARO_CAP_VAO, loadCilindre_EBO(6.0, 6.0, 1.0, 20, 20));
+	Set_VAOList(FARO_GLASS_VAO, loadCilindre_EBO(4.5, 4.5, 8.0, 20, 20));
+
+	// --- Tie: mínimo para que exista (si tu tie() usa más VAOs, ya los cargas en OnObjecteTie)
+	Set_VAOList(GLUT_CUBE, loadglutSolidCube_EBO(1.0));
+	Set_VAOList(GLU_SPHERE, loadgluSphere_EBO(1.0, 20, 20));
+
+	wglMakeCurrent(m_pDC->GetSafeHdc(), NULL);
+
+	// 6) Redibujar
+	InvalidateRect(NULL, FALSE);
+}
+
+void CEntornVGIView::OnUpdateObjectePaisatge(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(objecte == PAISATGE);
+}
+
 
 
 // OBJECTE: Cub RGB
