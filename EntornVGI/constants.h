@@ -79,6 +79,11 @@ const double p_far=50000.0;
 #define PICKFAR 1
 #define PICKVAIXELL 2 
 #define PICKHIDRO 3 
+// ====== ANIMACIÓ trajectòria paramètrica (globals) ======
+extern bool  g_animacio_param;
+extern int   g_t_param_deg;
+extern float g_R_param;
+
 
 // -------------- VGI: CONSTANTS TEXTURES
 // Nombre màxim de textures

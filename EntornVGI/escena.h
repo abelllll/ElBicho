@@ -43,5 +43,8 @@ void camio(GLuint shaderId, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_m
 void octopus(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
 void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
 void faro(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
+void cub_trajectoria_param(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5],
+	float R, int t_deg);
+
 
 #endif

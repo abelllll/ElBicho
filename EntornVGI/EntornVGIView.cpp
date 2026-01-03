@@ -36,6 +36,12 @@
 #include "escena.h"	// Include funcions d'objectes OpenGL
 #include <cmath>  // per a sqrt()
 
+// ====== ANIMACIÓ trajectòria paramètrica (globals) ======
+bool  g_animacio_param = false;
+int   g_t_param_deg = 0;
+float g_R_param = 200.0f;
+
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -313,6 +319,12 @@ CEntornVGIView::CEntornVGIView()
 //------ Entorn VGI: Inicialització de les variables globals de CEntornVGIView
 	int i;
 	t_textura = 0;   // per defecte, sense textura
+
+
+	animacio_param = false;
+	t_param_deg = 0;
+	R_param = 200.0f;
+
 
 
 // Entorn VGI: Variables de control per Menú Càmera: Esfèrica, Navega, Mòbil, Zoom, Satelit, Polars... 
@@ -1192,6 +1204,15 @@ void CEntornVGIView::OnPaint()
 		configura_Escena();
 		dibuixa_Escena();
 
+		// ====== TEST animació paramètrica (SIN Timer, SOLO prueba) ======
+		// ====== Animación paramétrica (avance de t) ======
+		if (g_animacio_param)
+		{
+			g_t_param_deg++;
+			if (g_t_param_deg >= 360) g_t_param_deg = 0;
+		}
+
+
 		// Intercanvia l'escena al front de la pantalla
 		SwapBuffers(m_pDC->GetSafeHdc());
 		break;
@@ -1241,6 +1262,10 @@ void CEntornVGIView::OnPaint()
 
 //  Actualitzar la barra d'estat de l'aplicació amb els valors R,A,B,PVx,PVy,PVz
 	Barra_Estat();
+	if (g_animacio_param)
+		InvalidateRect(NULL, FALSE);
+
+
 }
 
 
@@ -1533,6 +1558,19 @@ void CEntornVGIView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	const double incr = 0.025f;
 	double modul = 0;
 	GLdouble vdir[3] = { 0, 0, 0 };
+	// Tecla A: activar/desactivar animación paramétrica
+	if (nChar == 'A' || nChar == 'a')
+	{
+		g_animacio_param = !g_animacio_param;
+
+		// TEST para confirmar que entra (solo la primera vez, luego lo puedes borrar)
+		//AfxMessageBox(g_animacio_param ? _T("ANIM ON") : _T("ANIM OFF"));
+
+		InvalidateRect(NULL, FALSE);
+		return;
+	}
+
+
 
 	if (nChar == 'F') this->OnVistaFullscreen();	// Activació-Desactivació Full Screen
 	else if (objecte==C_BEZIER || objecte == C_BSPLINE || objecte == C_LEMNISCATA || objecte == C_HERMITTE 
@@ -1552,6 +1590,7 @@ void CEntornVGIView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 								else if (camera == CAM_NAVEGA) Teclat_Navega(nChar, nRepCnt);
 									else if (!sw_color) Teclat_ColorFons(nChar, nRepCnt);
 										else Teclat_ColorObjecte(nChar, nRepCnt);
+										
 						}
 
 // Crida a OnPaint() per redibuixar l'escena

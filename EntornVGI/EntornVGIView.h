@@ -176,6 +176,13 @@ public:
 	bool anima;		// Booleana que controla si l'animació és activa (TRUE) o no (FALSE)
 					//    dins la funció de control del rellotge OnTimer.
 
+// ====== ANIMACIÓ (Trajectòria paramètrica) ======
+	
+	bool animacio_param = false;   // activar/desactivar animación
+	int  t_param_deg = 0;          // ángulo en grados [0..359]
+	float R_param = 200.0f;        // radio del círculo (ajústalo si quieres)
+
+
 // Entorn VGI: Variables de l'objecte FRACTAL
 	char t_fractal;		// Tipus de fractal.
 	char soroll;		// Menú Fractals: Tipus de soroll

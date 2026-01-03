@@ -1536,6 +1536,39 @@ void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Matr
 	draw_TriVAO_Object(MAR_FRACTAL_VAO);
 
 	glDisable(GL_BLEND);
+	// --- TEST trajectòria paramètrica (cercle) amb un cub ---
+	// --- TEST trajectòria paramètrica (cercle) amb un cub ---
+	if (g_animacio_param)
+	{
+		CColor colC; colC.r = 1.0f; colC.g = 0.0f; colC.b = 0.0f; colC.a = 1.0f;
+		SeleccionaColorMaterial(sh_programID, colC, sw_mat);
+
+		cub_trajectoria_param(sh_programID, MatriuVista, MatriuTG, sw_mat, g_R_param, g_t_param_deg);
+	}
+
+
 }
+void cub_trajectoria_param(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5],
+	float R, int t_deg)
+{
+	// Pasar grados a radianes
+	float t = (float)t_deg * (float)PI / 180.0f;
+
+	// Ecuación de circunferencia
+	float x = R * cosf(t);
+	float y = R * sinf(t);
+	float z = 0.0f;
+
+	// ModelMatrix = MatriuTG + traslación a (x,y,z)
+	glm::mat4 ModelMatrix = MatriuTG;
+	ModelMatrix = glm::translate(ModelMatrix, glm::vec3(x, y, z));
+
+	// Dibujar un cubo (usa tu VAO de cubo)
+	// IMPORTANTE: si tu cubo se dibuja con draw_TriEBO_Object(GLUT_CUBE) úsalo tal cual.
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &ModelMatrix[0][0]);
+
+	draw_TriEBO_Object(GLUT_CUBE);
+}
+
 
 // FI OBJECTE TIE: FETS PER ALUMNES -----------------------------------------------------------------
