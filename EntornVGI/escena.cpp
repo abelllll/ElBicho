@@ -1678,7 +1678,7 @@ CVAO loadCatmullCtrlPts_VAO()
 
 	// Escala/offset para que quepa (ajusta si quieres)
 	const float SCALE_CR = 0.25f;
-	const float Z_OFFSET = 2.0f;
+	const float Z_OFFSET = 5.0f;
 
 	std::vector<GLfloat> verts;
 	verts.reserve(npts * 3);
@@ -1817,7 +1817,16 @@ void dibuixa_CatmullRom_Patches(GLuint sh_programID, glm::mat4 MatriuVista, glm:
 	glPointSize(12.0f);
 
 	// Dibuja VAO de puntos (usa tu función habitual)
-	draw_TriVAO_Object(CATMULL_PTS_VAO);
+	// --- Puntos de control (bolitas rojas) ---
+	glDisable(GL_CULL_FACE);             // por seguridad (no afecta a puntos)
+	glEnable(GL_PROGRAM_POINT_SIZE);     // permite tamaño de punto
+	glPointSize(12.0f);                  // tamaño de la bolita (ajusta si quieres)
+
+	draw_PointsVAO_Object(CATMULL_PTS_VAO);
+
+	// (opcional) volver al estado normal
+	glPointSize(1.0f);
+
 
 	// --- PARCHES CON COLORES ---
 	glLineWidth(5.0f);

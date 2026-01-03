@@ -236,6 +236,14 @@ void draw_TriVAO_Object(GLint k)
 		glBindVertexArray(0);
 	}
 }
+// Dibuja un VAO como puntos (GL_POINTS)
+void draw_PointsVAO_Object(int id)
+{
+	glBindVertexArray(VAOList[id].vaoId);
+	glDrawArrays(GL_POINTS, 0, VAOList[id].nVertexs);
+	glBindVertexArray(0);
+}
+
 
 void draw_LinVAO_Object(GLint k)
 {

@@ -160,6 +160,7 @@ void draw_TriVAO_Object(GLint k);
 void draw_LinVAO_Object(GLint k);
 void draw_TriEBO_Object(GLint k);
 void draw_LinEBO_Object(GLint k);
+void draw_PointsVAO_Object(int id);
 
 // ---------- CUBE -----------------------------------------------------------
 void glutSolidCube(GLdouble dSize);		// Generates solid cube. Code contributed by Andreas Umbach <marvin@dataway.ch>
