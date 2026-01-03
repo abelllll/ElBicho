@@ -106,6 +106,15 @@ extern float g_R_param;
 #define FARO_BASE_VAO   220
 #define FARO_CAP_VAO    221
 #define FARO_GLASS_VAO  222
+#define CATMULL_CURVE_VAO   310
+#define CATMULL_PTS_VAO     311
+#define CATMULL_PATCH0_VAO  320
+#define CATMULL_PATCH1_VAO  321
+#define CATMULL_PATCH2_VAO  322
+#define CATMULL_PATCH3_VAO  323
+#define CATMULL_PATCH4_VAO  324
+#define CATMULL_PATCH5_VAO  325
+
 
 
 

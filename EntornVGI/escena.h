@@ -49,6 +49,11 @@ void cub_trajectoria_param(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4
 void CR_LoadPatch(int patch, CPunt3D ctr[4]);
 CPunt3D CR_Point(float t, int patch);
 void dibuixa_CatmullRom(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
+CVAO loadCatmullCurve_VAO();
+CVAO loadCatmullCtrlPts_VAO();
+void dibuixa_CatmullRom_VAO(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
+CVAO loadCatmullPatch_VAO(int patch);
+void dibuixa_CatmullRom_Patches(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
 
 
 #endif

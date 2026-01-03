@@ -1520,7 +1520,7 @@ void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Matr
 {
 	// 1) Faro en el origen (opaco + vidrio transparente internamente)
 	faro(sh_programID, MatriuVista, MatriuTG, sw_mat);
-	dibuixa_CatmullRom(sh_programID, MatriuVista, MatriuTG, sw_mat);
+	
 	glm::mat4 M = MatriuTG;
 
 	const float SCALE_CR = 0.25f;
@@ -1557,6 +1557,8 @@ void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Matr
 
 		cub_trajectoria_param(sh_programID, MatriuVista, MatriuTG, sw_mat, g_R_param, g_t_param_deg);
 	}
+	dibuixa_CatmullRom_Patches(sh_programID, MatriuVista, MatriuTG, sw_mat);
+
 
 
 }
@@ -1598,60 +1600,67 @@ CPunt3D CR_Point(float t, int patch)
 }
 void dibuixa_CatmullRom(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
 {
-	// --- Estado OpenGL seguro para dibujar lineas y puntos ---
+	static bool once = false;
+	if (!once)
+	{
+		once = true;
+		OutputDebugStringA(">>> ENTRO en dibuixa_CatmullRom()\n");
+	}
+
+	// ===== OVERLAY MODE: que se vea sí o sí =====
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	// --- Para lineas/puntos: modelMatrix identidad (coordenadas mundo) ---
+	glDisable(GL_DEPTH_TEST);     // <-- clave: ignora profundidad (por encima del mar)
+	glDisable(GL_BLEND);
+
+	glPointSize(18.0f);
+	glLineWidth(8.0f);
+
+	// modelMatrix identidad para que sea mundo directo
 	glm::mat4 I(1.0f);
 	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &I[0][0]);
+	;
 
-	// Color de la curva (BLANCO para que destaque sobre el mar rojo)
 	CColor colCurve; colCurve.r = 1.0f; colCurve.g = 1.0f; colCurve.b = 1.0f; colCurve.a = 1.0f;
-	// Color puntos control (AMARILLO)
 	CColor colPts;   colPts.r = 1.0f; colPts.g = 1.0f; colPts.b = 0.0f; colPts.a = 1.0f;
+
 
 	// Escala para que la curva quepa dentro del mar
 	const float SCALE_CR = 0.25f;
-	const float Z_OFFSET_CR = 2.0f;   // levantar la curva 2 unidades sobre el mar
+	
 
 
 
-	// 1) Dibujar PUNTOS DE CONTROL (rojos)
 	SeleccionaColorMaterial(sh_programID, colPts, sw_mat);
 
-	glPointSize(14.0f);
 	glBegin(GL_POINTS);
 	for (int i = 0; i < npts; i++)
+	{
 		glVertex3f((float)PtsH[i].x * SCALE_CR,
 			(float)PtsH[i].y * SCALE_CR,
-			(float)PtsH[i].z * SCALE_CR + Z_OFFSET_CR);
-
+			(float)PtsH[i].z * SCALE_CR);
+	}
 	glEnd();
 
 
-	// 2) Dibujar CURVA Catmull-Rom (línea)
+
 	SeleccionaColorMaterial(sh_programID, colCurve, sw_mat);
 
-	glLineWidth(6.0f);
 	glBegin(GL_LINE_STRIP);
-
-	// patches: de 0 a npts-4 (con npts=9 => 0..5)
 	for (int patch = 0; patch <= npts - 4; patch++)
 	{
-		// t recorre el patch con NFRAMES pasos
 		for (int i = 0; i <= NFRAMES; i++)
 		{
 			float t = (float)i / (float)NFRAMES;
 			CPunt3D p = CR_Point(t, patch);
+
 			glVertex3f((float)p.x * SCALE_CR,
 				(float)p.y * SCALE_CR,
-				(float)p.z * SCALE_CR + Z_OFFSET_CR);
-
-
-
+				(float)p.z * SCALE_CR);
 		}
 	}
+	glEnd();
+	
 	// DEBUG: linea blanca grande en X para asegurar que se ven líneas
 	glLineWidth(8.0f);
 	glBegin(GL_LINES);
@@ -1663,6 +1672,174 @@ void dibuixa_CatmullRom(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Ma
 
 	
 }
+CVAO loadCatmullCtrlPts_VAO()
+{
+	CVAO vao;
+
+	// Escala/offset para que quepa (ajusta si quieres)
+	const float SCALE_CR = 0.25f;
+	const float Z_OFFSET = 2.0f;
+
+	std::vector<GLfloat> verts;
+	verts.reserve(npts * 3);
+
+	for (int i = 0; i < npts; i++)
+	{
+		verts.push_back((float)PtsH[i].x * SCALE_CR);
+		verts.push_back((float)PtsH[i].y * SCALE_CR);
+		verts.push_back((float)PtsH[i].z * SCALE_CR + Z_OFFSET);
+	}
+
+	glGenVertexArrays(1, &vao.vaoId);
+	glBindVertexArray(vao.vaoId);
+
+	glGenBuffers(1, &vao.vboId);
+	glBindBuffer(GL_ARRAY_BUFFER, vao.vboId);
+	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(GLfloat), verts.data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0); // location 0 = position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+
+	glBindVertexArray(0);
+
+	vao.nVertexs = (int)(verts.size() / 3);
+	
+
+	return vao;
+}
+CVAO loadCatmullCurve_VAO()
+{
+	CVAO vao;
+
+	const float SCALE_CR = 0.25f;
+	const float Z_OFFSET = 5.0f;
+
+	std::vector<GLfloat> verts;
+	// patches = npts-3 (con npts=9 => 6 patches), cada patch NFRAMES+1 puntos
+	verts.reserve((npts - 3) * (NFRAMES + 1) * 3);
+
+	for (int patch = 0; patch <= npts - 4; patch++)
+	{
+		for (int i = 0; i <= NFRAMES; i++)
+		{
+			float t = (float)i / (float)NFRAMES;
+			CPunt3D p = CR_Point(t, patch);
+
+			verts.push_back((float)p.x * SCALE_CR);
+			verts.push_back((float)p.y * SCALE_CR);
+			verts.push_back((float)p.z * SCALE_CR + Z_OFFSET);
+		}
+	}
+
+	glGenVertexArrays(1, &vao.vaoId);
+	glBindVertexArray(vao.vaoId);
+
+	glGenBuffers(1, &vao.vboId);
+	glBindBuffer(GL_ARRAY_BUFFER, vao.vboId);
+	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(GLfloat), verts.data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+
+	glBindVertexArray(0);
+
+	vao.nVertexs = (int)(verts.size() / 3);
+	
+
+	return vao;
+}
+CVAO loadCatmullPatch_VAO(int patch)
+{
+	CVAO vao;
+
+	const float SCALE_CR = 0.25f;
+	const float Z_OFFSET = 5.0f;
+
+	std::vector<GLfloat> verts;
+	verts.reserve((NFRAMES + 1) * 3);
+
+	for (int i = 0; i <= NFRAMES; i++)
+	{
+		float t = (float)i / (float)NFRAMES;
+		CPunt3D p = CR_Point(t, patch);
+
+		verts.push_back((float)p.x * SCALE_CR);
+		verts.push_back((float)p.y * SCALE_CR);
+		verts.push_back((float)p.z * SCALE_CR + Z_OFFSET);
+	}
+
+	glGenVertexArrays(1, &vao.vaoId);
+	glBindVertexArray(vao.vaoId);
+
+	glGenBuffers(1, &vao.vboId);
+	glBindBuffer(GL_ARRAY_BUFFER, vao.vboId);
+	glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(GLfloat), verts.data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+
+	glBindVertexArray(0);
+
+	vao.nVertexs = (int)(verts.size() / 3);
+	return vao;
+}
+
+void dibuixa_CatmullRom_VAO(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
+{
+	// Que destaque
+	CColor colCurve{ 1.0f, 1.0f, 1.0f, 1.0f };
+	CColor colPts{ 1.0f, 0.0f, 0.0f, 1.0f };
+
+	// modelMatrix identidad (ya viene en coordenadas mundo)
+	glm::mat4 I(1.0f);
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &I[0][0]);
+
+	// DIBUJAR PUNTOS CONTROL
+	SeleccionaColorMaterial(sh_programID, colPts, sw_mat);
+	glPointSize(10.0f);
+	draw_TriVAO_Object(CATMULL_PTS_VAO);
+	
+
+	// DIBUJAR CURVA
+	SeleccionaColorMaterial(sh_programID, colCurve, sw_mat);
+	glLineWidth(4.0f);
+	draw_TriVAO_Object(CATMULL_CURVE_VAO);
+}
+void dibuixa_CatmullRom_Patches(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
+{
+	// modelMatrix identidad
+	glm::mat4 I(1.0f);
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &I[0][0]);
+
+	// --- PUNTOS DE CONTROL (ROJO) ---
+	CColor colRed{ 1.0f, 0.0f, 0.0f, 1.0f };
+	SeleccionaColorMaterial(sh_programID, colRed, sw_mat);
+	glPointSize(12.0f);
+
+	// Dibuja VAO de puntos (usa tu función habitual)
+	draw_TriVAO_Object(CATMULL_PTS_VAO);
+
+	// --- PARCHES CON COLORES ---
+	glLineWidth(5.0f);
+
+	CColor col0{ 1.0f, 0.0f, 0.0f, 1.0f }; // rojo
+	CColor col1{ 0.0f, 1.0f, 0.0f, 1.0f }; // verde
+	CColor col2{ 0.0f, 0.5f, 1.0f, 1.0f }; // azul claro
+	CColor col3{ 1.0f, 0.0f, 1.0f, 1.0f }; // magenta
+	CColor col4{ 1.0f, 1.0f, 0.0f, 1.0f }; // amarillo
+	CColor col5{ 0.7f, 0.7f, 0.7f, 1.0f }; // gris
+
+	SeleccionaColorMaterial(sh_programID, col0, sw_mat); draw_TriVAO_Object(CATMULL_PATCH0_VAO);
+	SeleccionaColorMaterial(sh_programID, col1, sw_mat); draw_TriVAO_Object(CATMULL_PATCH1_VAO);
+	SeleccionaColorMaterial(sh_programID, col2, sw_mat); draw_TriVAO_Object(CATMULL_PATCH2_VAO);
+	SeleccionaColorMaterial(sh_programID, col3, sw_mat); draw_TriVAO_Object(CATMULL_PATCH3_VAO);
+	SeleccionaColorMaterial(sh_programID, col4, sw_mat); draw_TriVAO_Object(CATMULL_PATCH4_VAO);
+	SeleccionaColorMaterial(sh_programID, col5, sw_mat); draw_TriVAO_Object(CATMULL_PATCH5_VAO);
+}
+
+
+
+
 
 
 

@@ -4208,6 +4208,19 @@ void CEntornVGIView::OnObjectePaisatge()
 	Set_VAOList(FARO_CAP_VAO, loadCilindre_EBO(6.0, 6.0, 1.0, 20, 20));
 	Set_VAOList(FARO_GLASS_VAO, loadCilindre_EBO(4.5, 4.5, 8.0, 20, 20));
 
+	
+
+	Set_VAOList(CATMULL_PTS_VAO, loadCatmullCtrlPts_VAO());
+
+	Set_VAOList(CATMULL_PATCH0_VAO, loadCatmullPatch_VAO(0));
+	Set_VAOList(CATMULL_PATCH1_VAO, loadCatmullPatch_VAO(1));
+	Set_VAOList(CATMULL_PATCH2_VAO, loadCatmullPatch_VAO(2));
+	Set_VAOList(CATMULL_PATCH3_VAO, loadCatmullPatch_VAO(3));
+	Set_VAOList(CATMULL_PATCH4_VAO, loadCatmullPatch_VAO(4));
+	Set_VAOList(CATMULL_PATCH5_VAO, loadCatmullPatch_VAO(5));
+
+
+
 	// --- Tie: mínimo para que exista (si tu tie() usa más VAOs, ya los cargas en OnObjecteTie)
 	Set_VAOList(GLUT_CUBE, loadglutSolidCube_EBO(1.0));
 	Set_VAOList(GLU_SPHERE, loadgluSphere_EBO(1.0, 20, 20));
