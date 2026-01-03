@@ -29,6 +29,7 @@
 #ifndef SHARED_HANDLERS
 #include "EntornVGI.h"
 #endif
+#include "trajectories.h"
 
 #include "EntornVGIDoc.h"
 #include "EntornVGIView.h"
@@ -40,6 +41,12 @@
 bool  g_animacio_param = false;
 int   g_t_param_deg = 0;
 float g_R_param = 200.0f;
+
+// ====== CATMULL-ROM (globals) ======
+int   g_patchCR = 0;
+float g_tCR = 0.0f;
+float g_deltaCR = 1.0f / (float)NFRAMES;
+
 
 
 #ifdef _DEBUG
@@ -4206,6 +4213,11 @@ void CEntornVGIView::OnObjectePaisatge()
 	Set_VAOList(GLU_SPHERE, loadgluSphere_EBO(1.0, 20, 20));
 
 	wglMakeCurrent(m_pDC->GetSafeHdc(), NULL);
+	// ====== Catmull-Rom: posición inicial de la nau (patch 0, t=0) ======
+	g_patchCR = 0;
+	g_tCR = 0.0f;
+	g_deltaCR = 1.0f / (float)NFRAMES;
+
 
 	// 6) Redibujar
 	InvalidateRect(NULL, FALSE);

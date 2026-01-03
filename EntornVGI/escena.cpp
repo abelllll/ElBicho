@@ -15,6 +15,7 @@
 #include "material.h"
 #include "visualitzacio.h"
 #include "escena.h"
+#include "trajectories.h"
 
 // Dibuixa Eixos Coordenades Món i Reixes, activant un shader propi.
 void dibuixa_Eixos(GLuint ax_programID, bool eix, GLuint axis_Id, CMask3D reixa, CPunt3D hreixa, 
@@ -1519,10 +1520,21 @@ void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Matr
 {
 	// 1) Faro en el origen (opaco + vidrio transparente internamente)
 	faro(sh_programID, MatriuVista, MatriuTG, sw_mat);
-
-	// 2) Tie (posición fija provisional para test visual)
+	dibuixa_CatmullRom(sh_programID, MatriuVista, MatriuTG, sw_mat);
 	glm::mat4 M = MatriuTG;
-	M = glm::translate(M, glm::vec3(-200.0f, -200.0f, 10.0f));
+
+	const float SCALE_CR = 0.25f;
+	CPunt3D p0 = CR_Point(0.0f, 0);
+
+	M = glm::translate(M, glm::vec3((float)p0.x * SCALE_CR,
+		(float)p0.y * SCALE_CR,
+		(float)p0.z * SCALE_CR));
+
+
+	// Ajustes exigidos por el enunciado (origen delante cabina + escala 0.5)
+	M = glm::translate(M, glm::vec3(0.0f, -10.0f, 0.0f));
+	M = glm::scale(M, glm::vec3(0.5f, 0.5f, 0.5f));
+
 	tie(sh_programID, MatriuVista, M, sw_mat);
 
 	// 3) Mar ondulado TRANSPARENTE al final
@@ -1569,6 +1581,89 @@ void cub_trajectoria_param(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4
 
 	draw_TriEBO_Object(GLUT_CUBE);
 }
+//Helpers Catmull-Rom
+// ====== CATMULL-ROM helpers ======
+void CR_LoadPatch(int patch, CPunt3D ctr[4])
+{
+	// patch 0 usa PtsH[0..3], patch 1 usa PtsH[1..4], ...
+	for (int i = 0; i < 4; i++)
+		ctr[i] = PtsH[patch + i];
+}
+
+CPunt3D CR_Point(float t, int patch)
+{
+	CPunt3D ctr[4];
+	CR_LoadPatch(patch, ctr);
+	return Punt_Corba_CatmullRom(t, ctr);
+}
+void dibuixa_CatmullRom(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
+{
+	// --- Estado OpenGL seguro para dibujar lineas y puntos ---
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
+	// --- Para lineas/puntos: modelMatrix identidad (coordenadas mundo) ---
+	glm::mat4 I(1.0f);
+	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &I[0][0]);
+
+	// Color de la curva (BLANCO para que destaque sobre el mar rojo)
+	CColor colCurve; colCurve.r = 1.0f; colCurve.g = 1.0f; colCurve.b = 1.0f; colCurve.a = 1.0f;
+	// Color puntos control (AMARILLO)
+	CColor colPts;   colPts.r = 1.0f; colPts.g = 1.0f; colPts.b = 0.0f; colPts.a = 1.0f;
+
+	// Escala para que la curva quepa dentro del mar
+	const float SCALE_CR = 0.25f;
+	const float Z_OFFSET_CR = 2.0f;   // levantar la curva 2 unidades sobre el mar
+
+
+
+	// 1) Dibujar PUNTOS DE CONTROL (rojos)
+	SeleccionaColorMaterial(sh_programID, colPts, sw_mat);
+
+	glPointSize(14.0f);
+	glBegin(GL_POINTS);
+	for (int i = 0; i < npts; i++)
+		glVertex3f((float)PtsH[i].x * SCALE_CR,
+			(float)PtsH[i].y * SCALE_CR,
+			(float)PtsH[i].z * SCALE_CR + Z_OFFSET_CR);
+
+	glEnd();
+
+
+	// 2) Dibujar CURVA Catmull-Rom (línea)
+	SeleccionaColorMaterial(sh_programID, colCurve, sw_mat);
+
+	glLineWidth(6.0f);
+	glBegin(GL_LINE_STRIP);
+
+	// patches: de 0 a npts-4 (con npts=9 => 0..5)
+	for (int patch = 0; patch <= npts - 4; patch++)
+	{
+		// t recorre el patch con NFRAMES pasos
+		for (int i = 0; i <= NFRAMES; i++)
+		{
+			float t = (float)i / (float)NFRAMES;
+			CPunt3D p = CR_Point(t, patch);
+			glVertex3f((float)p.x * SCALE_CR,
+				(float)p.y * SCALE_CR,
+				(float)p.z * SCALE_CR + Z_OFFSET_CR);
+
+
+
+		}
+	}
+	// DEBUG: linea blanca grande en X para asegurar que se ven líneas
+	glLineWidth(8.0f);
+	glBegin(GL_LINES);
+	glVertex3f(-150.0f, 0.0f, 5.0f);
+	glVertex3f(150.0f, 0.0f, 5.0f);
+	glEnd();
+
+
+
+	
+}
+
 
 
 // FI OBJECTE TIE: FETS PER ALUMNES -----------------------------------------------------------------

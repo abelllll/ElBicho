@@ -45,6 +45,10 @@ void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Matr
 void faro(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
 void cub_trajectoria_param(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5],
 	float R, int t_deg);
+// ====== CATMULL-ROM ======
+void CR_LoadPatch(int patch, CPunt3D ctr[4]);
+CPunt3D CR_Point(float t, int patch);
+void dibuixa_CatmullRom(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5]);
 
 
 #endif
