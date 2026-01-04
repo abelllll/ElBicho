@@ -1519,38 +1519,85 @@ void faro(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool s
 }
 void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5])
 {
+	// ============================================================
 	// 1) Faro en el origen (opaco + vidrio transparente internamente)
+	// ============================================================
 	faro(sh_programID, MatriuVista, MatriuTG, sw_mat);
-	
+
+	// ============================================================
+	// 2) TIE instanciada sobre la curva con orientación Frenet (3.5)
+	// ============================================================
+
+	// 2.1) Tomamos el patch y t actuales (si aún no animas, estarán en 0,0)
+	extern int   g_patchCR;
+	extern float g_tCR;
+
+	int   patch = g_patchCR;
+	float t = g_tCR;
+
+	// 2.2) Cargamos ctr[4] = PtsH[k..k+3] (patch actual)
+	CPunt3D ctr[4];
+	CR_LoadPatch(patch, ctr);
+
+	// 2.3) Punto de la curva p(t)
+	CPunt3D p = Punt_Corba_CatmullRom(t, ctr);
+
+	// 2.4) Escala global de la curva (MISMA que los patches / triedros)
+	p.x *= SCALE_CR_PAI;
+	p.y *= SCALE_CR_PAI;
+	p.z *= SCALE_CR_PAI;
+
+	// 2.5) Triedre de Frenet en ese punto: VT, VBN, VNP
+	CPunt3D VT = VT_CatmullRom_Curve(t, ctr);      // Tangente (forward)
+	CPunt3D VBN = VBN_CatmullRom_Curve(t, ctr);     // Binormal
+	CPunt3D VNP = Prod_Vectorial(VBN, VT);          // Normal principal
+
+	// 2.6) Matriz de cambio de base Mcb (figura 8)
+	//      columnas = (VNP, VT, VBN)
+	glm::mat4 Mcb(1.0f);
+	Mcb[0] = glm::vec4((float)VNP.x, (float)VNP.y, (float)VNP.z, 0.0f);
+	Mcb[1] = glm::vec4((float)VT.x, (float)VT.y, (float)VT.z, 0.0f);
+	Mcb[2] = glm::vec4((float)VBN.x, (float)VBN.y, (float)VBN.z, 0.0f);
+	Mcb[3] = glm::vec4(0, 0, 0, 1);
+
+	// 2.7) Construimos la ModelMatrix en el orden correcto:
+	//      translate(p)  ->  * Mcb  ->  ajustes locales de la TIE
 	glm::mat4 M = MatriuTG;
 
-	const float SCALE_CR = 0.25f;
-	CPunt3D p0 = CR_Point(0.0f, 0);
+	// Traslación al punto de la curva
+	M = glm::translate(M, glm::vec3((float)p.x, (float)p.y, (float)p.z));
 
-	M = glm::translate(M, glm::vec3((float)p0.x * SCALE_CR_PAI,
-		(float)p0.y * SCALE_CR_PAI,
-		(float)p0.z * SCALE_CR_PAI));
+	// (Opcional si la ves mirando al revés o espejada)
+	// Pon SOLO UNO de estos y prueba:
+	// M = M * glm::scale(glm::mat4(1.0f), glm::vec3(-1.0f, 1.0f, 1.0f)); // flip X
+	// M = M * glm::scale(glm::mat4(1.0f), glm::vec3( 1.0f, 1.0f,-1.0f)); // flip Z
 
+	// Orientación por Frenet
+	M = M * Mcb;
 
 	// Ajustes exigidos por el enunciado (origen delante cabina + escala 0.5)
 	M = glm::translate(M, glm::vec3(0.0f, -10.0f, 0.0f));
 	M = glm::scale(M, glm::vec3(0.5f, 0.5f, 0.5f));
 
+	// Dibujar TIE
 	tie(sh_programID, MatriuVista, M, sw_mat);
 
+	// ============================================================
 	// 3) Mar ondulado TRANSPARENTE al final
+	// ============================================================
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glm::mat4 SeaM = MatriuTG;
 	glUniformMatrix4fv(glGetUniformLocation(sh_programID, "modelMatrix"), 1, GL_FALSE, &SeaM[0][0]);
 
-	// Si tu mar se dibuja como VAO:
 	draw_TriVAO_Object(MAR_FRACTAL_VAO);
 
 	glDisable(GL_BLEND);
-	// --- TEST trajectòria paramètrica (cercle) amb un cub ---
-	// --- TEST trajectòria paramètrica (cercle) amb un cub ---
+
+	// ============================================================
+	// 4) TEST trajectòria paramètrica (cercle) amb un cub
+	// ============================================================
 	if (g_animacio_param)
 	{
 		CColor colC; colC.r = 1.0f; colC.g = 0.0f; colC.b = 0.0f; colC.a = 1.0f;
@@ -1558,11 +1605,13 @@ void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Matr
 
 		cub_trajectoria_param(sh_programID, MatriuVista, MatriuTG, sw_mat, g_R_param, g_t_param_deg);
 	}
+
+	// ============================================================
+	// 5) Dibujo de la curva + patches + triedros (lo que ya tienes)
+	// ============================================================
 	dibuixa_CatmullRom_Patches(sh_programID, MatriuVista, MatriuTG, sw_mat);
-
-
-
 }
+
 void cub_trajectoria_param(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 MatriuTG, bool sw_mat[5],
 	float R, int t_deg)
 {
