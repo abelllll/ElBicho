@@ -16,6 +16,7 @@
 #include "visualitzacio.h"
 #include "escena.h"
 #include "trajectories.h"
+#include "glut_geometry.h"
 
 // Dibuixa Eixos Coordenades Món i Reixes, activant un shader propi.
 void dibuixa_Eixos(GLuint ax_programID, bool eix, GLuint axis_Id, CMask3D reixa, CPunt3D hreixa, 
@@ -1526,9 +1527,9 @@ void dibuixa_Paisatge(GLuint sh_programID, glm::mat4 MatriuVista, glm::mat4 Matr
 	const float SCALE_CR = 0.25f;
 	CPunt3D p0 = CR_Point(0.0f, 0);
 
-	M = glm::translate(M, glm::vec3((float)p0.x * SCALE_CR,
-		(float)p0.y * SCALE_CR,
-		(float)p0.z * SCALE_CR));
+	M = glm::translate(M, glm::vec3((float)p0.x * SCALE_CR_PAI,
+		(float)p0.y * SCALE_CR_PAI,
+		(float)p0.z * SCALE_CR_PAI));
 
 
 	// Ajustes exigidos por el enunciado (origen delante cabina + escala 0.5)
@@ -1685,9 +1686,9 @@ CVAO loadCatmullCtrlPts_VAO()
 
 	for (int i = 0; i < npts; i++)
 	{
-		verts.push_back((float)PtsH[i].x * SCALE_CR);
-		verts.push_back((float)PtsH[i].y * SCALE_CR);
-		verts.push_back((float)PtsH[i].z * SCALE_CR + Z_OFFSET);
+		verts.push_back((float)PtsH[i].x * SCALE_CR_PAI);
+		verts.push_back((float)PtsH[i].y * SCALE_CR_PAI);
+		verts.push_back((float)PtsH[i].z * SCALE_CR_PAI + Z_OFFSET);
 	}
 
 	glGenVertexArrays(1, &vao.vaoId);
@@ -1763,9 +1764,9 @@ CVAO loadCatmullPatch_VAO(int patch)
 		float t = (float)i / (float)NFRAMES;
 		CPunt3D p = CR_Point(t, patch);
 
-		verts.push_back((float)p.x * SCALE_CR);
-		verts.push_back((float)p.y * SCALE_CR);
-		verts.push_back((float)p.z * SCALE_CR + Z_OFFSET);
+		verts.push_back((float)p.x * SCALE_CR_PAI);
+		verts.push_back((float)p.y * SCALE_CR_PAI);
+		verts.push_back((float)p.z * SCALE_CR_PAI + Z_OFFSET);
 	}
 
 	glGenVertexArrays(1, &vao.vaoId);
@@ -1876,6 +1877,59 @@ void dibuixa_CatmullRom_Patches(GLuint sh_programID, glm::mat4 MatriuVista, glm:
 	SeleccionaColorMaterial(sh_programID, col3, sw_mat); draw_TriVAO_Object(CATMULL_PATCH3_VAO);
 	SeleccionaColorMaterial(sh_programID, col4, sw_mat); draw_TriVAO_Object(CATMULL_PATCH4_VAO);
 	SeleccionaColorMaterial(sh_programID, col5, sw_mat); draw_TriVAO_Object(CATMULL_PATCH5_VAO);
+
+	const float SCALE_CR = SCALE_CR_PAI;  // misma escala global del Paisatge
+	const int STEP = 1;                   // 1 = como el enunciado (uno por punto)
+
+	// ------------------------------------------------------------------
+	// CAMBIO 3: dibujar el triedro "encima" y nítido (sin cortes al zoom)
+	// Guardamos el estado anterior para NO romper el render global.
+	// ------------------------------------------------------------------
+	GLboolean prevDepth = glIsEnabled(GL_DEPTH_TEST);
+	GLfloat prevLineWidth = 1.0f;
+	glGetFloatv(GL_LINE_WIDTH, &prevLineWidth);
+
+	glDisable(GL_DEPTH_TEST);   // para que no lo tape nada
+	glLineWidth(2.0f);          // líneas más gordas para verlo bien
+
+	// ------------------------------------------------------------------
+	// Dibujo de triedros
+	// ------------------------------------------------------------------
+	for (int patch = 0; patch <= npts - 4; patch++)
+	{
+		CPunt3D ctr[4];
+		for (int j = 0; j < 4; j++) ctr[j] = PtsH[patch + j];
+
+		// IMPORTANTE: usamos i < NFRAMES (no <=) para NO duplicar t=1
+		for (int i = 0; i < NFRAMES; i += STEP)
+		{
+			float t = (float)i / (float)NFRAMES;
+
+			CPunt3D p = Punt_Corba_CatmullRom(t, ctr);
+
+			// Escala global
+			p.x *= SCALE_CR;
+			p.y *= SCALE_CR;
+			p.z *= SCALE_CR;
+
+			// BONUS: offset mínimo para evitar z-fighting (ajusta 0.02 - 0.05)
+			p.z += 0.02f;
+
+			// Vectores Frenet (funciones del entorno ya normalizadas)
+			CPunt3D VT = VT_CatmullRom_Curve(t, ctr);
+			CPunt3D VBN = VBN_CatmullRom_Curve(t, ctr);
+			CPunt3D VNP = Prod_Vectorial(VBN, VT);
+
+			dibuixa_Triedre_Frenet(sh_programID, p, VT, VNP, VBN);
+		}
+	}
+
+	// ------------------------------------------------------------------
+	// Restaurar estado anterior (IMPORTANTE)
+	// ------------------------------------------------------------------
+	glLineWidth(prevLineWidth);
+	if (prevDepth) glEnable(GL_DEPTH_TEST);
+	else glDisable(GL_DEPTH_TEST);
 }
 
 

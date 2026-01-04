@@ -53,6 +53,9 @@ public:
 	double angleZ;			// angle de rotació de la trajectòria.
 	glm::mat4 ViewMatrix;	// Matriu de Càmera a passar al shader
 
+
+
+
 // Entorn VGI: Variables de control de l'opció Càmera->Geode?
 	CEsfe3D OPV_G;			// Paràmetres camera en coord. esfèriques (R,alfa,beta) per a Vista Geode
 

@@ -619,6 +619,12 @@ CEntornVGIView::CEntornVGIView()
 	ContextMenu = new CMenu();
 	if (!ContextMenu->LoadMenu(IDR_MENU_WINDOW))	AfxMessageBox(_T("Fail to create context menu"));
 
+// ====== INIT Triedre de Frenet ======
+	VT = { 1.0, 0.0, 0.0, 1.0 };
+	VNP = { 0.0, 1.0, 0.0, 1.0 };
+	VBN = { 0.0, 0.0, 1.0, 1.0 };
+
+
 }
 
 CEntornVGIView::~CEntornVGIView()
@@ -4199,7 +4205,7 @@ void CEntornVGIView::OnObjectePaisatge()
 
 	// --- Mar ondulado (como en ARC)
 	CColor color_Mar;
-	color_Mar.r = 0.5; color_Mar.g = 0.4; color_Mar.b = 0.9; color_Mar.a = 1.0;
+	color_Mar.r = 0.4; color_Mar.g = 0.4; color_Mar.b = 0.9; color_Mar.a = 1.0;
 	Set_VAOList(MAR_FRACTAL_VAO, loadSea_VAO(color_Mar));
 
 	// --- Faro: VAOs EXACTOS (base cónica + tapa + vidrio)

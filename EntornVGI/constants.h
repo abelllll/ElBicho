@@ -117,6 +117,8 @@ extern float g_R_param;
 
 
 
+// ====== Paisatge / Catmull-Rom scale ======
+#define SCALE_CR_PAI 0.5f   // <-- antes 0.25f, ajusta aquí el tamaño global
 
 // --------------  VGI: NOMBRE DE LLUMS: Nombre de Llums de l'aplicació, les d'OpenGL
 const int NUM_MAX_LLUMS = 8;
